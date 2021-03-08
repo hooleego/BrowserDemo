@@ -1,0 +1,32 @@
+#include "winver.h"
+
+IDI_APP ICON DISCARDABLE "resources/application.ico"
+
+VS_VERSION_INFO VERSIONINFO
+    FILEVERSION @BUILDSYS_VERSION_MAJOR@,@BUILDSYS_VERSION_MINOR@,@BUILDSYS_VERSION_PATCH@,@BUILDSYS_REVISION@
+    PRODUCTVERSION @BUILDSYS_VERSION_MAJOR@,@BUILDSYS_VERSION_MINOR@,@BUILDSYS_VERSION_PATCH@,@BUILDSYS_REVISION@
+    FILEFLAGSMASK 0x3fL
+    FILEFLAGS 0x0L
+    FILEOS 0x40004L
+    FILETYPE 0x1L
+    FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "000004b0"
+        BEGIN
+            VALUE "CompanyName", "HLG"
+            VALUE "FileDescription", "@BUILDSYS_PRODUCT_NAME@ Application"
+            VALUE "FileVersion", "@BUILDSYS_VERSION@.@BUILDSYS_REVISION@"
+            VALUE "InternalName", "@BUILDSYS_PHONE_OUTPUT_NAME@"
+            VALUE "LegalCopyright", "Copyright © 2021 HLG"
+            VALUE "OriginalFilename", "@BUILDSYS_PHONE_OUTPUT_NAME@.exe"
+            VALUE "ProductName", "@BUILDSYS_PRODUCT_NAME@"
+            VALUE "ProductVersion", "@BUILDSYS_VERSION@.@BUILDSYS_REVISION@"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0, 1200
+    END
+END
