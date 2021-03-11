@@ -44,6 +44,10 @@ BUILDSYS_AUTO_SOURCES(
   browserview.h
   browserview.cpp
   browserview.ui
+  browserv8handler.h
+  browserv8handler.cpp
+  browsercallimpl.h
+  browsercallimpl.cpp
   config/appconfig.h
   config/appconfig.cpp
   # ${APPLICATION_TARGET}.json

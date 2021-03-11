@@ -1,5 +1,7 @@
+#include <QtCore/QDebug>
 #include "browserclient.h"
 #include "browserview.h"
+#include "browsercallimpl.h"
 
 #include <sstream>
 #include <string>
@@ -14,7 +16,6 @@
 
 namespace
 {
-
   // Returns a data: URI with the specified contents.
   std::string GetDataURI(const std::string &data, const std::string &mime_type)
   {
@@ -25,26 +26,27 @@ namespace
 
 } // namespace
 
-BrowserClient::BrowserClient(bool use_views, BrowserView *view) : use_views_(use_views), is_closing_(false), m_view(view)
+BrowserClient::BrowserClient(bool use_views, BrowserView *view) : use_views_(use_views), is_closing_(false), m_view(view), m_callImpl(nullptr)
 {
-  
+    m_callImpl = new BrowserCallImpl();
 }
 
 BrowserClient::~BrowserClient()
 {
+    delete m_callImpl;
 }
 
 CefRefPtr<CefDisplayHandler> BrowserClient::GetDisplayHandler()
 {
-    return this;
+  return this;
 }
 CefRefPtr<CefLifeSpanHandler> BrowserClient::GetLifeSpanHandler()
 {
-    return this;
+  return this;
 }
 CefRefPtr<CefLoadHandler> BrowserClient::GetLoadHandler()
 {
-    return this;
+  return this;
 }
 
 void BrowserClient::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
@@ -78,7 +80,7 @@ void BrowserClient::OnAfterCreated(CefRefPtr<CefBrowser> browser)
 
   if (m_view)
   {
-      m_view->setIdentifier(browser->GetIdentifier());
+    m_view->setIdentifier(browser->GetIdentifier());
   }
 }
 
@@ -110,7 +112,7 @@ void BrowserClient::OnBeforeClose(CefRefPtr<CefBrowser> browser)
   {
     if ((*bit)->IsSame(browser))
     {
-        m_browserList.erase(bit);
+      m_browserList.erase(bit);
       break;
     }
   }
@@ -142,16 +144,16 @@ void BrowserClient::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFram
 
 CefRefPtr<CefBrowser> BrowserClient::GetBrowserByID(int browserId)
 {
-    for (auto it = m_browserList.begin(); it != m_browserList.end(); it++)
+  for (auto it = m_browserList.begin(); it != m_browserList.end(); it++)
+  {
+
+    if (browserId == it->get()->GetIdentifier())
     {
-
-        if (browserId == it->get()->GetIdentifier())
-        {
-            return it->get();
-        }
+      return it->get();
     }
+  }
 
-    return nullptr;
+  return nullptr;
 }
 
 void BrowserClient::CloseAllBrowsers(bool force_close)
@@ -173,5 +175,47 @@ void BrowserClient::CloseAllBrowsers(bool force_close)
 
 bool BrowserClient::IsClosing() const
 {
-    return is_closing_;
+  return is_closing_;
+}
+
+bool BrowserClient::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser,
+                                             CefRefPtr<CefFrame> frame,
+                                             CefProcessId source_process,
+                                             CefRefPtr<CefProcessMessage> message)
+{
+  CefString message_name = message->GetName();
+  qInfo() << QString(QObject::tr("OnProcessMessageReceived %1")).arg(message_name.c_str());
+
+  if (message_name == "kFocusedNodeChangedMessage")
+  {
+    // is_focus_oneditable_field_ = message->GetArgumentList()->GetBool(0);
+    return true;
+  }
+  else if (message_name == "kCallCppFunctionMessage")
+  {
+    CefString func = message->GetArgumentList()->GetString(0);
+    CefString param = message->GetArgumentList()->GetString(1);
+    int js_callback_id = message->GetArgumentList()->GetInt(2);
+
+    qInfo() << QString(QObject::tr("Process message func=%1, param=%2, callback_id=%3")).arg(func.c_str()).arg(param.c_str()).arg(js_callback_id);
+
+    if (m_callImpl)
+    {
+        m_callImpl->OnImplemention(func, param, js_callback_id, browser, frame);
+    }
+
+    return true;
+  }
+  else if (message_name == "kExecuteCppCallbackMessage")
+  {
+    CefString param = message->GetArgumentList()->GetString(0);
+    int callback_id = message->GetArgumentList()->GetInt(1);
+
+    // if (handle_delegate_)
+    // {
+    //   handle_delegate_->OnExecuteCppCallbackFunc(callback_id, param);
+    // }
+  }
+
+  return false;
 }

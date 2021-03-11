@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+	<script language="JavaScript">
+		function ipcCall() {
+			var res = ipcApp.call('add', { 'num1': 1.0, 'num2': 6.0 }, (arguments)=>{
+			    document.getElementById('demo').innerHTML = arguments;
+			    console.log(arguments);
+			});
+			return res;
+		}
+		
+		(() => {
+			/*
+			 * 注册一个回调函数，用于在 C++ 应用中调用
+			 * param[in] showJsMessage 回调函数的名称，C++ 会使用该名称来调用此回调函数
+			 * param[in] callback 回调函数执行体
+			 */
+			ipcApp.register('showJsMessage', (arguments) => {
+			    console.log(JSON.stringify(arguments));
+				var receiveMessageInput = document.getElementById('receive_message_input');
+				receiveMessageInput.innerHTML = JSON.stringify(arguments);
+				return {
+					message: 'showJsMessage function was executed, this message return by JavaScript.'
+				}
+			});
+		})();
+	</script>
+	<body>
+		<h1>JavaScript事件</h1>
+		<button onclick="ipcCall();">时间是？</button>
+		<p id="demo"/>
+		<p id="receive_message_input" />
+	</body>
+</html>

@@ -1,4 +1,8 @@
 ﻿#include <QtWidgets/QApplication>
+#include <QtCore/QFile>
+#include <QtCore/QTextStream>
+#include <QtCore/QDateTime>
+#include <QtCore/QDebug>
 #include "mainwindow.h"
 #include "config/appconfig.h"
 #include <windows.h>
@@ -38,9 +42,39 @@ void CefQuit()
     CefShutdown();
 }
 
+void LoggerFunction(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QFile logFile(QLatin1String("logger.log"));
+
+    if (logFile.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text))
+    {
+        QTextStream streamer(&logFile);
+
+        switch (type) {
+        case QtDebugMsg:
+            break;
+        case QtInfoMsg:
+            streamer << QDateTime::currentDateTime().toString() << " Info: " << msg << "\n";
+            break;
+        case QtWarningMsg:
+            streamer << QDateTime::currentDateTime().toString() << " Warning: " << msg << "\n";
+            break;
+        case QtCriticalMsg:
+            streamer << QDateTime::currentDateTime().toString() << " Critical: " << msg << "\n";
+            break;
+        case QtFatalMsg:
+            streamer << QDateTime::currentDateTime().toString() << " Fatal: " << msg << "\n";
+            break;
+        }
+        logFile.close();
+    }
+}
+
 int main(int argc, char *argv[])
 {
     int currentExitCode = 0;
+
+    qInstallMessageHandler(LoggerFunction);
 
     // make an application restartable: https://wiki.qt.io/How_to_make_an_Application_restartable
     do
